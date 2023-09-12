@@ -248,7 +248,6 @@ would be decremented.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Bonus Question 7 (Ex 3.13 from Lecture Notes: Goldbach)
 
-
 /**
  * Check if X is not a prime number.
  *
@@ -264,8 +263,8 @@ notPrime(X, Y) :-
     X > Y,  % Check if X is greater than Y. Otherwise, it can't be divisible.
     0 is X mod Y.  % Check if the remainder after division is 0.
 notPrime(X, Y) :-
-    sqrt(X, Upper),  % Compute the upper bound to check for.
-    Upper >= Y + 1,  % Increment Y as long as it does not exceed the limit.
+    Upper is X / 2,
+    Upper >= Y + 2,  % Check if the next uneven number is in bound.
     notPrime(X, Y + 1).  % Check if X is divisible by the new Y.
 
 /**
