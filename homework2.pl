@@ -130,8 +130,9 @@ are not entirely made out of operators.
 blabla.
 blibli.
 /*
-blu should be post fix according to the third predicate.
-TODO associativity explaination
+blu should be post fix according to the third predicate. It should prioritize
+the other term (bli) as otherwise blu would take priority in 'blu(_)'.
+Therefore, blu has to be associative.
 */
 :- op(600, yf, blu).
 
@@ -249,59 +250,55 @@ would be decremented.
 % Bonus Question 7 (Ex 3.13 from Lecture Notes: Goldbach)
 
 /**
- * Check if X is not a prime number.
+ * Check if X is factorizable.
  *
- * This is done by checking if X is divisible by any other number.
- * X is divisible by a number Y if the remainder after division is 0.
- *
- * Note that we only have to check the numbers from 2 to sqrt(X). The reason is
- * that if there was any number after the sqrt(X) that was a factor, the other
- * factor would have to be smaller than the sqrt(X). This means that we have
- * already checked these possible candidates priorly.
+ * This is done by checking if the remainder of X mod Y is 0 for any integer
+ * Y between 2 and sqrt(X). This is because both factors would be sqrt(X), if
+ * it were a factor. Otherwise, one factor would be smaller than sqrt(X) and
+ * the other would be bigger than sqrt(X).
  */
-notPrime(X, Y) :-
-    X > Y,  % Check if X is greater than Y. Otherwise, it can't be divisible.
-    0 is X mod Y.  % Check if the remainder after division is 0.
-notPrime(X, Y) :-
-    Upper is X / 2,
-    Upper >= Y + 2,  % Check if the next uneven number is in bound.
-    notPrime(X, Y + 1).  % Check if X is divisible by the new Y.
+factor(X, Y) :-
+    X > Y,  % Y can only be a factor if it is strictly smaller than X.
+    0 is X mod Y.  % Any factor would have a remainder of 0 after division.
+factor(X, Y) :-
+    UB is sqrt(X),  % The upperbound is sqrt(X) as explained in comment above.
+    Y1 is Y + 1,  % Compute next integer in range [2, sqrt(X)].
+    UB >= Y1,  % Check if the integer is in range.
+    factor(X, Y1).  % Check if the next integer is a factor of X.
 
 /**
  * Check if N is a prime number.
  *
- * This is done by checking if N is greater than two and checking if it is
- * not not prime. In other words, if the number is not divisible by any other
- * number.
+ * This is done by checking if the number has any factor in range [2, sqrt(X)].
  */
-prime(2).  % 2 is the smallest prime number and therefore the base case.
+prime(2).  % 2 is the smallest prime number.
 prime(N) :-
-    N > 2,  % Check if the number is greater than 2 (the smallest prime).
-    not(notPrime(N, 2)).  % Check if N is not not prime.
+    not(factor(N, 2)).  % A prime has no factors other than 1 and itself.
 
 /**
- * Check if N is a sum of two primes A and B. S is the expression 'A+B'.
+ * Check if N can be expressed as a sum of exactly two primes.
  *
- * This is done by choosing A > 2 and B = N - A and check if they are both
- * prime. If that is the case, then a solution is found. If that is not the
- * case, A is incremented and B is recomputed. We again check if the new A
- * and B are prime. This process is repeated until an upperbound is reached.
- *
- * The upperbound is currently set to N / 2. This is because any value higher
- * has already been checked for. The A and B terms would just be swapped.
+ * This is done by checking if N is 4 of an even integer. We recursively try to
+ * initialize A as a odd integer in range [3, N/2]. This is because the even
+ * integer must be the sum of two odd integers. We the compute B and check if
+ * both A and B are prime. If this is the case, then the solution is found.
+ * Otherwise, the next odd number is tried. Note that we only check odd numbers
+ * until N/2, because at this point A and B swap and numbers are checked again.
  */
+goldbach(4, 2+2).  % The smallest even number greater than 2 is 4.
 goldbach(N, S) :-
-    U is round(N / 2),  % Set the upperbound to N / 2.
-    goldbach(2, 2, U, N, S).  % Try A=2 as the first option in range [2, N/2].
-goldbach(A, L, U, N, S) :-
-    between(L, U, A),  % Check if A is in range [L, U].
+    goldbach(N, S, 3).  % For any other even number, find A recursively.
+goldbach(N, S, A) :-
+    N > 2,  % N has to be greater than 2.
+    0 is N mod 2,  % N has to be even.
+    B is N - A,  % Compute B using N and A.
     prime(A),  % Check if A is prime.
-    B is N - A,  % Compute B to be N - A, since A and B have to sum up to N.
     prime(B),  % Check if B is prime.
-    S = A + B.  % Satisfy the predicate and provide the solution.
-goldbach(A, L, U, N, S) :-
-    A1 is A + 1,  % Increment A.
-    goldbach(A1, L, U, N, S).  % Try again with a higher A value.
+    S = A + B.  % Set S to the mathematical expression.
+goldbach(N, S, A) :-
+    A1 is A + 2,  % If the above predicate failed, try the next odd number.
+    A1 =< N / 2,  % Check if the next odd number is in range [3, N/2].
+    goldbach(N, S, A1).  % Try if the next odd number is A.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
