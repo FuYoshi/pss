@@ -14,8 +14,8 @@
  *
  * This is done by checking if the Head of the first list is in the second list
  * using select/3. The element is then removed from the second list resulting
- * in NewList. This is repeated using the tail of the first List to check for
- * every element. The NewList is used in recursion instead of List to allow
+ * in NewList. This is repeated until every element in the first list is
+ * checked for. The NewList is used in recursion instead of List to allow
  * the same element to occur multiple times in the first List.
  */
 sublist([], _).
@@ -30,10 +30,10 @@ sublist([Elem | Tail], List) :-
 % (a) line/2
 
 /**
- * Repeat a symbol n times.
+ * Repeat a symbol N times.
  *
  * This is done by writing the symbol once and then recursively call the
- * predicate with n - 1. Eventually n = 0, which satisfies the predicate.
+ * predicate with N - 1. Eventually n = 0, which satisfies the predicate.
  */
 line(0, _).  % Satisfy the predicate when it is done writing.
 line(N, Symbol) :-
@@ -306,6 +306,6 @@ goldbach(N, S, A) :-
 %
 % I hereby declare that these solutions are entirely my own work and no part has been copied from other sources.
 %
-% Number of LC hours I attended this week: ...
+% Number of LC hours I attended this week: 3
 %
-% Additional hours I spent on the homework: ...
+% Additional hours I spent on the homework: 6
