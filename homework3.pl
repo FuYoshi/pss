@@ -24,6 +24,7 @@
 gcd(A, 0, A) :- !.  % Do not backtrack to the second rule after solving.
 % Recursive case. Keep changing A and B to B and remainder.
 gcd(A, B, Result) :-
+    \+ B = 0,  % Disallow B=0, as this only happens for wrong answers.
     Remainder is A mod B,
     gcd(B, Remainder, Result).
 
@@ -75,7 +76,6 @@ separation([Elem | Tail], Positives, [Elem | Negatives]) :-
 
 % (b) separationNoCut/3
 
-% TODO instantly terminate instead of asking for ';'.
 separationNoCut([], [], []).
 separationNoCut([Elem | Tail], [Elem | Positives], Negatives) :-
     Elem >= 0,
@@ -188,14 +188,109 @@ voting_power(Country, Power) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Question 5 (dynamic counter)
 
-% ...
+/* Specify that counter is dynamic so it may be incremented. */
+:- dynamic counter/1.
+
+/**
+ * Initialize a counter at 0.
+ */
+% Case (1). If the counter is initialized, reset it to 0.
+init_counter() :-
+    get_counter(C), !,  % Do not backtrack to case (2).
+    retract(counter(C)),
+    assert(counter(0)).
+% Case (2). If the counter is uninitialized, set it to 0.
+init_counter() :-
+    assert(counter(0)).
+
+/**
+ * Add 1 to the counter.
+ */
+step_counter() :-
+    get_counter(C),
+    C1 is C + 1,
+    assert(counter(C1)),
+    retract(counter(C)).
+
+/**
+ * Get the current value of the counter.
+ */
+get_counter(C) :-
+    counter(C).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Bonus Question 6 (robot navigation)
 
-% ...
+/* Specify that position and orientation are dynamic. */
+:- dynamic position/1.
+:- dynamic orientation/1.
 
+/* The starting position is (0, 0) with orientation north. */
+position((0, 0)).
+orientation(north).
+
+/* Find the direction towards the right of the first direction. */
+rightOf(north, east) :- !.
+rightOf(east, south) :- !.
+rightOf(south, west) :- !.
+rightOf(west, north) :- !.
+
+/* Find the numerical values corresponding to a direction. */
+orientation(north, (0,  1)) :- !.
+orientation(east,  (1,  0)) :- !.
+orientation(south, (0, -1)) :- !.
+orientation(west,  (-1, 0)) :- !.
+
+/* Sum the Xs and Ys of two coordinates. */
+add_tuple((X0, Y0), (X1, Y1), (X2, Y2)) :-
+    X2 is X0 + X1,
+    Y2 is Y0 + Y1.
+
+/**
+ * Execute the command (move, left, right) with the given position and
+ * orientation. Set the new position and orientation as result.
+ */
+% Move by summing the X and Y values of the coordinates.
+execute(Position, Orientation, move, NewPosition, NewOrientation) :-
+    !,
+    NewOrientation = Orientation,
+    orientation(Orientation, Direction),
+    add_tuple(Position, Direction, NewPosition),
+    retract(position(Position)),
+    assert(position(NewPosition)).
+% Turn left by finding the direction towards the left of the orientation.
+execute(Position, Orientation, left, NewPosition, NewOrientation) :-
+    !,
+    NewPosition = Position,
+    rightOf(NewOrientation, Orientation),
+    retract(orientation(Orientation)),
+    assert(orientation(NewOrientation)).
+% Turn right by finding the direction towards the right of the orientation.
+execute(Position, Orientation, right, NewPosition, NewOrientation) :-
+    !,
+    NewPosition = Position,
+    rightOf(Orientation, NewOrientation),
+    retract(orientation(Orientation)),
+    assert(orientation(NewOrientation)).
+
+/**
+ * Find the final status of the robot after performing a list of commands.
+ */
+% Base case. If the command list is empty, then the final values are known.
+status(Position, Orientation, [], FinalPosition, FinalOrientation) :-
+    !,
+    FinalPosition = Position,
+    FinalOrientation = Orientation.
+% Recursive case (1). Execute the head command and recursively call status for the tail.
+status(Position, Orientation, [Head | Tail], FinalPosition, FinalOrientation) :-
+    execute(Position, Orientation, Head, NewPosition, NewOrientation),
+    status(NewPosition, NewOrientation, Tail, FinalPosition, FinalOrientation).
+% Recursive case (2). Get the position and orientation and perform the commands in the command list.
+status(CommandList, FinalPosition, FinalOrientation) :-
+    position(Position),
+    orientation(Orientation),
+    status(Position, Orientation, CommandList, FinalPosition, FinalOrientation).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -205,4 +300,4 @@ voting_power(Country, Power) :-
 %
 % Number of LC hours I attended this week: 4
 %
-% Additional hours I spent on the homework: 6
+% Additional hours I spent on the homework: 2
