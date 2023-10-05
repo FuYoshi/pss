@@ -192,25 +192,24 @@ found, 12 being the length of the shortest path from start to goal in this
 particular maze.
 
 ? Write down which algorithm you recommend for this problem, and why.
-Either the DFS cyclefree algorithm or DFS bound algorithm should be used.
-This is because both algorithms do not get stuck in a infinite loop inside the
-maze. If the user wants to find all possible solutions, then DFS cyclefree
-should be used. For bigger mazes, however, the shortest may only consist of a
-very small portion of the entire maze. In this case, using the DFS bound
-algorithm could ignore the long paths that may exist saving some computing
-time. The problem with the DFS bound algorithm is that if the bound is chosen
-too small, the algorithm will not find any solution. Therefore, I would
-recommend using the DFS cyclefree algorithm and only recommend using the
-DFS bound algorithm when more specified information about the maze is available
-(such as shortest path length).
+The plain DFS algorithm should not be used as it loops indefinitely on cycles.
+The DFS bound algorithm may be used if you want to find the shortest path and
+the length of the shortest path is already known. In this case, the algorithm
+efficiently searches for the shortest path through the maze and ignores paths
+that are longer. If there is no information available on the shortest path of
+the maze, then the DFS cyclefree algorithm should be used. The algorithm will
+find any possible path through the maze. This guarantees finding any possible
+path through the maze, while using a too small bounding parameter would cause
+the DFS bound algorithm to not find any solutions.
+Therefore, the DFS cyclefree algorithm is recommended for this problem. There
+is an exception when there is information about the maze. In that case, using
+the DFS bound algorithm may save computing power.
 */
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Bonus Question 7: animate                                 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% ...
 
 /**
  * Replace an element at index with value. The index counter starts at 1.
