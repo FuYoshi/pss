@@ -12,6 +12,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Distances (https://www.openstreetmap.org/)
+distance(amsterdam, leeuwarden, 134). % ?
 distance(amsterdam, utrecht, 45).
 distance(amsterdam, haarlem, 29).
 distance(amsterdam, zwolle, 105).
@@ -59,43 +60,103 @@ coordinate(rotterdam, 51.9244/4.4778).
  */
 coordinates(City, X/Y) :-
 	coordinate(City, Latitude/Longitude),
-	X is Latitude * 110.574,
-	Y is Longitude * (111.320 * cos(Latitude * 3.14159 / 180)).
+	X is round(Latitude * 110.574),
+	Y is round(Longitude * (111.320 * cos(Latitude * 3.14159 / 180))).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Question 6: move/3
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% ...
+/**
+ * Given CityA search for ways to move to another CityB and find the cost.
+ */
+move(CityA, CityB, Cost) :-
+	distance(CityA, CityB, Cost).
+move(CityA, CityB, Cost) :-
+	distance(CityB, CityA, Cost).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Question 7: estimate/2
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+/**
+ * Find the distance between two points using Pythagorean theorem.
+ */
 pythagoras(A, B, C) :-
 	C is sqrt(A * A + B * B).
 
-estimate(Src/Dst, Estimate) :-
-	coordinates(Src, X0/Y0),
-	coordinates(Dst, X1/Y1),
+/**
+ * Estimate the cost of moving from CityA to CityB using a heuristic function.
+ *
+ * The heuristic function computes the straight line between CityA and CityB,
+ * any path that connects CityA to CityB can only be greater than or equal to
+ * this estimate.
+ */
+h(CityA, Estimate) :-
+	goal(CityB),
+	coordinates(CityA, X0/Y0),
+	coordinates(CityB, X1/Y1),
 	DX is abs(X1 - X0),
 	DY is abs(Y1 - Y0),
 	pythagoras(DX, DY, Estimate).
+
+/**
+ * Estimate the cost of moving from CityA to CityB using a heuristic function.
+ *
+ * The heuristic function computes the length of the straight line from CityA
+ * to CityB in km. It then multiplies it by 1.2 to make it slightly better in
+ * exchange for not having guaranteed optimality.
+ */
+estimate(City, Estimate) :-
+	h(City, Estimate1),
+	Estimate is Estimate1 * 1.2.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Question 8: route/4
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% ...
+/**
+ * Give the Route and Distance to move from CityA to CityB.
+ *
+ * Dynamically assert CityB as the goal so that estimate/2 only requires CityA
+ * as argument.
+ */
+% Case where goal/1 already exists due to previous uses.
+route(CityA, CityB, Route, Distance) :-
+	current_predicate(goal/1),
+	goal(CityC),
+	retract(goal(CityC)),
+	assert(goal(CityB)),
+	solve_astar(CityA, Route/Distance).
+% Case where goal/1 does not exist and can be instantiated.
+route(CityA, CityB, Route, Distance) :-
+	assert(goal(CityB)),
+	solve_astar(CityA, Route/Distance).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Question 9: examples with first three answers
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% ...
+/*
+?- route(breda, haarlem, R, D).
+R = [breda, rotterdam, haarlem],
+D = 121 ;
+R = [breda, utrecht, haarlem],
+D = 133 ;
+R = [breda, utrecht, amsterdam, haarlem],
+D = 148 .
+
+?- route(amsterdam, groningen, R, D).
+R = [amsterdam, leeuwarden, groningen],
+D = 198 ;
+R = [amsterdam, zwolle, groningen],
+D = 210 ;
+R = [amsterdam, haarlem, leeuwarden, groningen],
+D = 232 .
+ */
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
