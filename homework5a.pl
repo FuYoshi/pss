@@ -61,8 +61,8 @@ goal(Target:Terms) :-
  * Find the solution to obtain target value Target from the terms Terms.
  */
 solve(Target, Terms, Solution) :-
-    solve_iterative_deepening(Target:Terms, Path),
-    % solve_breadthfirst(Target:Terms, Path),
+    % solve_iterative_deepening(Target:Terms, Path),
+    solve_breadthfirst(Target:Terms, Path),
     % solve_depthfirst(Target:Terms, Path),
     % solve_depthfirst_cyclefree(Target:Terms, Path),
     last(Path, Target:[Solution | _]),
